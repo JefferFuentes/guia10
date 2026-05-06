@@ -11,10 +11,17 @@ class CursoController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $cursos = Curso::all();
-        return view('cursos.index', compact('cursos'));
+        $buscar = $request->input('buscar');
+
+        $cursos = Curso::with('aulas')
+            ->when($buscar, function ($query, $buscar) {
+                return $query->where('nombre', 'like', "%$buscar%");
+            })
+            ->get();
+
+        return view('cursos.index', compact('cursos', 'buscar'));
     }
 
     /**

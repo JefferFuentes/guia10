@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Aula;
+use App\Models\Curso;
 use Illuminate\Http\Request;
 
 class AulaController extends Controller
@@ -10,10 +11,17 @@ class AulaController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $aulas = Aula::all();
-        return view('aulas.index', compact('aulas'));
+        $buscar = $request->input('buscar');
+
+        $aulas = Aula::with('cursos')
+            ->when($buscar, function ($query, $buscar) {
+                return $query->where('nombre', 'like', "%$buscar%");
+            })
+            ->get();
+
+        return view('aulas.index', compact('aulas', 'buscar'));
     }
 
     /**
@@ -50,12 +58,12 @@ class AulaController extends Controller
     }
 
     // ✏️ Mostrar formulario para editar
-    public function edit(Request $request, int $id)
+    public function edit(int $id)
     {
         $aula = Aula::findOrFail($id);
-        $aula->update($request->all());
-        $aula->cursos()->sync($request->cursos); // Sincronizar cursos asignados
-        return view('aulas.edit', compact('aula'));
+        $cursos = Curso::all(); // 👈 necesario para el select
+
+        return view('aulas.edit', compact('aula', 'cursos'));
     }
 
     // 💾 Actualizar en la base de datos
@@ -63,14 +71,20 @@ class AulaController extends Controller
     {
         $aula = Aula::findOrFail($id);
 
-        // Validación (ajústala a tus campos)
         $request->validate([
             'nombre' => 'required|max:255',
             'capacidad' => 'required|integer|min:1',
+            'cursos' => 'array' // 👈 importante
         ]);
 
-        // Actualizar datos
-        $aula->update($request->all());
+        // ✔️ actualizar datos del aula
+        $aula->update([
+            'nombre' => $request->nombre,
+            'capacidad' => $request->capacidad,
+        ]);
+
+        // ✔️ sincronizar cursos
+        $aula->cursos()->sync($request->cursos ?? []);
 
         return redirect()->route('aulas.index')
             ->with('success', 'Aula actualizada correctamente');
