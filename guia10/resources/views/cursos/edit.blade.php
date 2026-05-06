@@ -3,11 +3,11 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Crear Curso</title>
+    <title>Editar Curso</title>
 </head>
 
 <body>
-    <h1>Crear Nuevo Curso</h1>
+    <h1>Editar Curso</h1>
 
     {{-- Mostrar errores de validación --}}
     @if ($errors->any())
@@ -20,19 +20,22 @@
     </div>
     @endif
 
-    <form action="{{ route('cursos.store') }}" method="POST">
+    <form action="{{ route('cursos.update', $curso->id) }}" method="POST">
         @csrf
+        @method('PUT')
 
         <label for="nombre">Nombre del Curso:</label><br>
-        <input type="text" id="nombre" name="nombre" value="{{ old('nombre') }}"><br><br>
+        <input type="text" id="nombre" name="nombre" value="{{ old('nombre', $curso->nombre) }}"><br><br>
 
         <label for="duracion">Duración (en horas):</label><br>
-        <input type="number" id="duracion" name="duracion" value="{{ old('duracion') }}"><br><br>
+        <input type="number" id="duracion" name="duracion" value="{{ old('duracion', $curso->duracion) }}"><br><br>
 
         <label for="aula_id">Aula:</label><br>
         <select name="aulas[]" multiple>
             @foreach($aulas as $aula)
-            <option value="{{ $aula->id }}">{{ $aula->nombre }}</option>
+            <option value="{{ $aula->id }}" {{ in_array($aula->id, old('aulas', $curso->aulas->pluck('id')->toArray())) ? 'selected' : '' }}>
+                {{ $aula->nombre }}
+            </option>
             @endforeach
         </select>
         <br><br>
