@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Aula;
 use Illuminate\Http\Request;
 use App\Models\Curso;
 
@@ -21,7 +22,9 @@ class CursoController extends Controller
      */
     public function create()
     {
-        return view('cursos.create');
+        $aulas = Aula::all(); // 👈 traes las aulas
+
+        return view('cursos.create', compact('aulas')); // 👈 las envías
     }
 
     /**
@@ -29,44 +32,78 @@ class CursoController extends Controller
      */
     public function store(Request $request)
     {
+        // Validación
         $request->validate([
             'nombre' => 'required',
-            'duracion' => 'required|integer',
+            'duracion' => 'required',
+            'aulas' => 'required|array'
         ]);
 
-        Curso::create($request->all());
-        return redirect()->route('cursos.index');
+        // Crear curso
+        $curso = Curso::create([
+            'nombre' => $request->nombre,
+            'duracion' => $request->duracion,
+        ]);
+
+        // 🔗 Relacionar con aulas (tabla pivot)
+        $curso->aulas()->attach($request->aulas);
+
+        return redirect()->route('cursos.index')
+            ->with('success', 'Curso creado correctamente');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    // 🔍 Mostrar un curso específico
+    public function show(int $id)
     {
-        //
+        $curso = Curso::findOrFail($id);
+        $curso = Curso::all()->find($id); // 👈 traes el curso con sus aulas
+        return view('cursos.index', compact('curso'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    // ✏️ Mostrar formulario para editar
+    public function edit(int $id)
     {
-        //
+        $curso = Curso::findOrFail($id);
+        $aulas = Aula::all(); // 👈 traes las aulas
+
+        return view('cursos.edit', compact('curso', 'aulas')); // 👈 las envías
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    // 💾 Actualizar en la base de datos
+    public function update(Request $request, $id)
     {
-        //
+        $curso = Curso::findOrFail($id);
+
+        // Validación
+        $request->validate([
+            'nombre' => 'required',
+            'duracion' => 'required',
+            'aulas' => 'required|array'
+        ]);
+
+        // ✏️ Actualizar datos del curso
+        $curso->update([
+            'nombre' => $request->nombre,
+            'duracion' => $request->duracion,
+        ]);
+
+        // 🔗 Sincronizar aulas (pivot)
+        $curso->aulas()->sync($request->aulas);
+
+        return redirect()->route('cursos.index')
+            ->with('success', 'Curso actualizado correctamente');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    // 🗑️ Eliminar un curso
+    public function destroy(int $id)
     {
-        //
+        $curso = Curso::findOrFail($id);
+        $curso->delete();
+
+        return redirect()->route('cursos.index')
+            ->with('success', 'Curso eliminado correctamente');
     }
 }

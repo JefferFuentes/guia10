@@ -10,4 +10,9 @@ class Curso extends Model
         'nombre',
         'duracion',
     ];
+
+    public function aulas()
+    {
+        return $this->belongsToMany(Aula::class);
+    }
 }
