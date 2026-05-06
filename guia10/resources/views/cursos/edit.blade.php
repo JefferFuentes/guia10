@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Editar Curso</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 </head>
 
 <body>
@@ -33,7 +35,8 @@
         <label for="aula_id">Aula:</label><br>
         <select name="aulas[]" multiple>
             @foreach($aulas as $aula)
-            <option value="{{ $aula->id }}" {{ in_array($aula->id, old('aulas', $curso->aulas->pluck('id')->toArray())) ? 'selected' : '' }}>
+            <option value="{{ $aula->id }}"
+                {{ $curso->aulas->contains($aula->id) ? 'selected' : '' }}>
                 {{ $aula->nombre }}
             </option>
             @endforeach
@@ -44,7 +47,7 @@
     </form>
 
     <br>
-    <a href="{{ route('cursos.index') }}">Volver a la lista de cursos</a>
+    <button class="btn btn-secondary"><a href="{{ route('cursos.index') }}" class="text-white text-decoration-none">Volver a la lista de cursos</a></button>
 </body>
 
 </html>
